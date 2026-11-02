@@ -36,7 +36,6 @@ st.markdown(
     /* Keep Streamlit's layout header transparent so its empty surface doesn't
        paint a pale badge over the top edge of the dashboard workspace. */
     [data-testid="stHeader"] { background:transparent !important; }
-    [data-testid="stHeader"] [data-testid="stToolbar"],
     [data-testid="stHeader"] [data-testid="stAppDeployButton"],
     [data-testid="stHeader"] [data-testid="stMainMenu"],
     #MainMenu { display:none !important; }
@@ -102,6 +101,14 @@ st.markdown(
     button[data-testid="collapsedControl"], button[data-testid="stSidebarCollapsedControl"] {
       display:flex !important; position:fixed !important; top:.75rem !important; left:.75rem !important;
       z-index:999999 !important; width:2.35rem !important; height:2.35rem !important; }
+    [data-testid="stExpandSidebarButton"] {
+      display:flex !important; position:fixed !important; top:.75rem !important; left:.75rem !important;
+      z-index:1000001 !important; width:2.45rem !important; height:2.45rem !important;
+      color:#142B4A !important; background:#FFFFFF !important; border:1px solid #CBD5E1 !important;
+      border-radius:9px !important; box-shadow:0 2px 8px rgba(20,43,74,.16) !important;
+      visibility:visible !important; opacity:1 !important; }
+    [data-testid="stExpandSidebarButton"] svg {
+      fill:#142B4A !important; color:#142B4A !important; stroke:#142B4A !important; opacity:1 !important; }
     button[data-testid="collapsedControl"] svg, button[data-testid="stSidebarCollapsedControl"] svg {
       fill:#142B4A !important; color:#142B4A !important; opacity:1 !important; }
     button[aria-label="Expand sidebar"], button[aria-label="Collapse sidebar"] {
@@ -113,9 +120,6 @@ st.markdown(
       z-index:1000000 !important; width:2.45rem !important; height:2.45rem !important; }
     button[aria-label="Expand sidebar"] svg, button[aria-label="Collapse sidebar"] svg {
       fill:#142B4A !important; color:#142B4A !important; stroke:#142B4A !important; opacity:1 !important; }
-    button[aria-label="Expand sidebar"]::after {
-      content:"›"; display:block; color:#142B4A !important; font:700 1.75rem/1 Arial, sans-serif;
-      margin-top:-.12rem; }
     [data-testid="stSidebarHeader"] button, [data-testid="stSidebarCollapseButton"],
     button[data-testid="stSidebarCollapseButton"] {
       color:#F2F6FC !important; fill:#F2F6FC !important; background:#1C3C64 !important;
