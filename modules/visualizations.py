@@ -1,6 +1,7 @@
 """Consistent, accessible Plotly charts for the dashboard."""
 import plotly.express as px
 import plotly.graph_objects as go
+import pandas as pd
 
 COLORS = {
     "Google Ads": "#2457A7",
@@ -125,3 +126,66 @@ def budget_chart(allocation):
     _polish(fig, "Proposed budget distribution")
     fig.update_layout(legend_title_text="Channel", legend={"font": {"color": INK}, "title": {"font": {"color": INK}}})
     return fig
+
+
+def campaign_metric_chart(data, metric, title, currency=False):
+    """Compare one selected campaign measure while retaining its original units."""
+    if data.empty or metric not in data.columns:
+        return _polish(go.Figure(), title, "INR (₹)" if currency else metric)
+    fig = px.bar(
+        data, x="Campaign Key", y=metric, color="Channel", text_auto=".2s",
+        color_discrete_map=COLORS, barmode="group",
+    )
+    fig.update_traces(textposition="outside", cliponaxis=False)
+    _polish(fig, title, "INR (₹)" if currency else metric)
+    fig.update_layout(legend_title_text="Channel")
+    fig.update_xaxes(tickangle=-25)
+    if currency:
+        fig.update_yaxes(tickprefix="₹", separatethousands=True)
+    return fig
+
+
+def ranking_chart(data, metric, title, currency=False):
+    """Compact horizontal ranking chart for the selected campaign metric."""
+    if data.empty or metric not in data.columns:
+        return _polish(go.Figure(), title, "INR (₹)" if currency else metric)
+    ordered = data.sort_values(metric, ascending=True, kind="stable")
+    fig = px.bar(
+        ordered, x=metric, y="Campaign Key", color="Channel", orientation="h",
+        text_auto=".2s", color_discrete_map=COLORS,
+    )
+    fig.update_traces(textposition="outside", cliponaxis=False)
+    _polish(fig, title, "INR (₹)" if currency else metric)
+    fig.update_layout(yaxis={"title": {"text": ""}, "showgrid": False,
+                             "linecolor": GRID, "tickfont": {"color": INK}},
+                      legend_title_text="Channel")
+    if currency:
+        fig.update_xaxes(tickprefix="₹", separatethousands=True)
+    return fig
+
+
+def period_comparison_chart(comparison, metric):
+    """Show one current-versus-prior total with its native unit."""
+    figure = go.Figure()
+    current = comparison.get(f"Current {metric}", float("nan"))
+    previous = comparison.get(f"Previous {metric}", float("nan"))
+    if metric == "ROI (%)":
+        y_title, prefix, suffix = "ROI (%)", "", "%"
+    elif metric in ("Revenue", "Spend"):
+        y_title, prefix, suffix = "INR (₹)", "₹", ""
+    else:
+        y_title, prefix, suffix = "Campaign count", "", ""
+    for label, value, color in [
+        ("Previous equivalent period", previous, "#3B82F6"),
+        ("Selected period", current, "#10B981"),
+    ]:
+        if pd.notna(value):
+            figure.add_bar(name=label, x=[label], y=[value], marker_color=color,
+                           text=[f"{prefix}{value:,.1f}{suffix}"], textposition="outside")
+    figure.update_layout(barmode="group", showlegend=False)
+    figure = _polish(figure, f"{metric} by period", y_title)
+    if prefix:
+        figure.update_yaxes(tickprefix=prefix, separatethousands=True)
+    if suffix:
+        figure.update_yaxes(ticksuffix=suffix)
+    return figure
