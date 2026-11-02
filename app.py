@@ -33,7 +33,9 @@ st.markdown(
             --blue:#2457A7; --accent:#3B82F6; --green:#10B981; --orange:#F59E0B;
             --red:#EF4444; --line:#E5EAF2; --canvas:#F5F7FB; }
     .stApp { background:var(--canvas); color:var(--ink); }
-    [data-testid="stHeader"] { background:rgba(245,247,251,.97); }
+    /* Keep Streamlit's layout header transparent so its empty surface doesn't
+       paint a pale badge over the top edge of the dashboard workspace. */
+    [data-testid="stHeader"] { background:transparent !important; }
     [data-testid="stHeader"] [data-testid="stToolbar"],
     [data-testid="stHeader"] [data-testid="stAppDeployButton"],
     [data-testid="stHeader"] [data-testid="stMainMenu"],
