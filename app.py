@@ -177,17 +177,40 @@ st.markdown(
       border-radius:9px !important; font-weight:650 !important; }
     [data-testid="stDownloadButton"] button:hover, [data-testid="stButton"] button:hover {
       background:#1B468B !important; color:#FFFFFF !important; }
-    [data-testid="stPopover"] > button, .st-key-settings_shortcut button {
-      min-width:2.45rem !important; height:2.45rem !important; padding:0 .55rem !important;
-      background:#FFFFFF !important; color:#142B4A !important; border:1px solid #D7E0EB !important;
-      border-radius:999px !important; box-shadow:0 2px 7px rgba(20,43,74,.08) !important;
-      font-weight:700 !important; }
-    [data-testid="stPopover"] > button:hover, .st-key-settings_shortcut button:hover {
-      background:#EEF4FB !important; color:#142B4A !important; border-color:#A8BCD5 !important; }
-    .st-key-profile_menu [data-testid="stPopover"] > button {
-      background:#2457A7 !important; color:#FFFFFF !important; border-color:#2457A7 !important; }
-    .st-key-profile_menu [data-testid="stPopover"] > button:hover {
-      background:#1B468B !important; color:#FFFFFF !important; }
+    .st-key-top_nav_actions { gap:16px !important; justify-content:flex-end !important; align-items:center !important; }
+    .st-key-notification_menu, .st-key-settings_shortcut, .st-key-profile_menu { position:relative; flex:0 0 fit-content !important; }
+    .st-key-notification_menu [data-testid="stPopoverButton"], .st-key-settings_shortcut button {
+      width:42px !important; min-width:42px !important; height:42px !important; padding:0 !important;
+      background:#F1F5F9 !important; color:#334155 !important; border:0 !important;
+      border-radius:50% !important; box-shadow:none !important; transition:background-color .16s ease,color .16s ease !important; }
+    .st-key-notification_menu [data-testid="stPopoverButton"]:hover,
+    .st-key-settings_shortcut button:hover { background:#E2E8F0 !important; color:#142B4A !important; }
+    .st-key-notification_menu [data-testid="stPopoverButton"][aria-expanded="true"],
+    .st-key-settings_shortcut button:active { background:#DBEAFE !important; }
+    .st-key-profile_menu [data-testid="stPopoverButton"] {
+      width:68px !important; min-width:68px !important; height:42px !important; padding:0 7px !important;
+      background:#F1F5F9 !important; color:#2457A7 !important; border:0 !important;
+      border-radius:999px !important; box-shadow:none !important; font-weight:750 !important;
+      transition:background-color .16s ease !important; }
+    .st-key-profile_menu [data-testid="stPopoverButton"]:hover { background:#E2E8F0 !important; }
+    .st-key-profile_menu [data-testid="stPopoverButton"][aria-expanded="true"] { background:#DBEAFE !important; }
+    .st-key-notification_menu [data-testid="stPopoverButton"] > div > div[aria-hidden="true"] { display:none !important; }
+    .st-key-notification_menu [data-testid="stPopoverButton"] > div > div:first-child { margin:auto !important; }
+    .st-key-profile_menu [data-testid="stPopoverButton"] > div > div:first-child > span { display:flex !important; align-items:center; }
+    .st-key-profile_menu [data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] {
+      display:flex !important; align-items:center; justify-content:center; width:29px; height:29px;
+      border-radius:50%; background:#2457A7 !important; color:#FFFFFF !important; overflow:hidden; }
+    .st-key-profile_menu [data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] p {
+      margin:0 !important; color:#FFFFFF !important; font-size:.72rem !important; line-height:1 !important; }
+    .st-key-profile_menu [data-testid="stPopoverButton"] [data-testid="stIconMaterial"] { color:#334155 !important; }
+    @media (max-width:800px) {
+      .app-brand .brand-icon { width:32px; height:32px; }
+      .app-brand-name { max-width:105px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.88rem; }
+      .app-brand-caption { display:none; }
+      .st-key-notification_menu [data-testid="stPopoverButton"], .st-key-settings_shortcut button { width:38px !important; min-width:38px !important; height:38px !important; }
+      .st-key-profile_menu [data-testid="stPopoverButton"] { width:64px !important; min-width:64px !important; height:38px !important; }
+      .st-key-profile_menu [data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] { width:27px; height:27px; }
+    }
     [data-testid="collapsedControl"] button, [data-testid="stSidebarCollapsedControl"] button,
     button[data-testid="collapsedControl"], button[data-testid="stSidebarCollapsedControl"] {
       color:#142B4A !important; background:#FFFFFF !important; border:1px solid #CBD5E1 !important;
@@ -262,10 +285,10 @@ if st.session_state.pref_theme == "Dark":
         .page-note, .method-note { color:#DAE5F3 !important; background:#1B2B42 !important; border-color:#344A67 !important; }
         [data-baseweb="input"] input, [data-baseweb="select"] > div, [data-baseweb="textarea"] textarea,
         [data-testid="stNumberInput"] input { background:#172438 !important; color:#E6EDF7 !important; }
-        [data-testid="stPopover"] button { color:#E6EDF7 !important; }
-        [data-testid="stPopover"] > button, .st-key-settings_shortcut button {
-          background:#172438 !important; color:#E6EDF7 !important; border-color:#3A4D65 !important; }
-        .st-key-profile_menu [data-testid="stPopover"] > button { background:#2457A7 !important; color:#FFFFFF !important; }
+        [data-testid="stPopoverButton"] { color:#334155 !important; }
+        .st-key-notification_menu [data-testid="stPopoverButton"], .st-key-settings_shortcut button,
+        .st-key-profile_menu [data-testid="stPopoverButton"] { background:#F1F5F9 !important; color:#334155 !important; }
+        .st-key-profile_menu [data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] p { color:#FFFFFF !important; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -635,49 +658,55 @@ logo_svg = '''<svg class="brand-icon" viewBox="0 0 44 44" role="img" aria-label=
 <path d="m10 19 8-5 7 2 9-7" fill="none" stroke="#79D7B2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>'''
 
-brand_col, spacer_col, notification_col, settings_col, profile_col = st.columns([5.7, 1.2, .65, .65, .75], vertical_alignment="center")
+brand_col, actions_col = st.columns([7, 3], vertical_alignment="center")
 with brand_col:
     st.markdown(
         f'<div class="app-brand">{logo_svg}<div><div class="app-brand-name">Campaign Intelligence</div>'
         '<div class="app-brand-caption">Marketing performance workspace</div></div></div>',
         unsafe_allow_html=True,
     )
-with notification_col:
-    unread_count = sum(not item["read"] for item in st.session_state.notifications)
-    notification_label = str(unread_count) if unread_count else " "
-    with st.popover(notification_label, icon=":material/notifications:", help="Notifications", key="notification_menu", width="content"):
-        st.markdown("**Notifications**")
-        st.caption(connection_message)
-        if upload_error:
-            st.error(f"Upload issue: {upload_error}")
-        if unread_count:
-            st.button("Mark all as read", key="mark_all_notifications_read", on_click=mark_all_notifications_read, use_container_width=True)
-        if st.session_state.notifications:
-            for notification in st.session_state.notifications:
-                with st.container(border=True):
-                    st.markdown(f"**{notification['title']}**")
-                    status = "Unread" if not notification["read"] else "Read"
-                    st.caption(f"{notification['type'].title()} · {status} · {notification['timestamp']}")
-                    st.write(notification["description"])
-                    if not notification["read"]:
-                        st.button(
-                            "Mark as read", key=f"mark_notification_{notification['id']}",
-                            on_click=mark_notification_read, args=(notification["id"],),
-                        )
-            st.button("Clear notifications", key="clear_notifications", on_click=clear_notifications, use_container_width=True)
-        else:
-            st.info("No notifications yet.")
-with settings_col:
-    if st.button(" ", icon=":material/settings:", key="settings_shortcut", help="Open display settings", type="tertiary", use_container_width=True):
-        open_utility_page("Settings")
-with profile_col:
-    profile_label = profile_initials(st.session_state.pref_display_name)
-    with st.popover(profile_label, icon=":material/account_circle:", help="Profile and application menu", key="profile_menu", width="content"):
-        st.markdown(f"**{html.escape(st.session_state.pref_display_name.strip() or 'Workspace user')}**")
-        st.caption("Local workspace · no account sign-in")
-        st.button("My Profile", key="menu_my_profile", on_click=open_utility_page, args=("My Profile",), use_container_width=True)
-        st.button("About Campaign Intelligence", key="menu_about", on_click=open_utility_page, args=("About Campaign Intelligence",), use_container_width=True)
-        st.button("Help & Support", key="menu_help_support", on_click=open_utility_page, args=("Help & Support",), use_container_width=True)
+unread_count = sum(not item["read"] for item in st.session_state.notifications)
+if unread_count:
+    st.markdown(
+        f"<style>.st-key-notification_menu::after{{content:'{unread_count}';position:absolute;right:-2px;top:-3px;"
+        "min-width:16px;height:16px;padding:0 3px;border-radius:999px;background:#EF4444;color:#FFFFFF;"
+        "font:700 10px/16px Inter,Arial,sans-serif;text-align:center;z-index:3;}}</style>",
+        unsafe_allow_html=True,
+    )
+with actions_col:
+    with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="right", gap="small", key="top_nav_actions"):
+        notification_label = " "
+        with st.popover(notification_label, icon=":material/notifications:", help="Notifications", key="notification_menu", width="content"):
+            st.markdown("**Notifications**")
+            st.caption(connection_message)
+            if upload_error:
+                st.error(f"Upload issue: {upload_error}")
+            if unread_count:
+                st.button("Mark all as read", key="mark_all_notifications_read", on_click=mark_all_notifications_read, use_container_width=True)
+            if st.session_state.notifications:
+                for notification in st.session_state.notifications:
+                    with st.container(border=True):
+                        st.markdown(f"**{notification['title']}**")
+                        status = "Unread" if not notification["read"] else "Read"
+                        st.caption(f"{notification['type'].title()} · {status} · {notification['timestamp']}")
+                        st.write(notification["description"])
+                        if not notification["read"]:
+                            st.button(
+                                "Mark as read", key=f"mark_notification_{notification['id']}",
+                                on_click=mark_notification_read, args=(notification["id"],),
+                            )
+                st.button("Clear notifications", key="clear_notifications", on_click=clear_notifications, use_container_width=True)
+            else:
+                st.info("No notifications yet.")
+        if st.button(" ", icon=":material/settings:", key="settings_shortcut", help="Open display settings", type="tertiary"):
+            open_utility_page("Settings")
+        profile_label = profile_initials(st.session_state.pref_display_name)
+        with st.popover(profile_label, help="Profile and application menu", key="profile_menu", width="content"):
+            st.markdown(f"**{html.escape(st.session_state.pref_display_name.strip() or 'Workspace user')}**")
+            st.caption("Local workspace · no account sign-in")
+            st.button("My Profile", key="menu_my_profile", on_click=open_utility_page, args=("My Profile",), use_container_width=True)
+            st.button("About Campaign Intelligence", key="menu_about", on_click=open_utility_page, args=("About Campaign Intelligence",), use_container_width=True)
+            st.button("Help & Support", key="menu_help_support", on_click=open_utility_page, args=("Help & Support",), use_container_width=True)
 if st.session_state.utility_page is None:
     page = selected_page
 else:
@@ -849,4 +878,5 @@ if page in pages:
         "Product costs and profit are not included, so this is not profit-based ROI. "
         + monetary_note
     )
+
 
