@@ -12,10 +12,16 @@ if str(ROOT) not in sys.path:
 from modules.data_processing import CHANNELS, filter_data, load_sample_data, validate_data
 from modules.metrics import campaign_performance, channel_performance, funnel_metrics, monthly_performance, summarize
 from modules.recommendations import budget_allocation, generate_insights, generate_recommendations
+from modules.advanced_analytics import (
+    CAMPAIGN_METRICS, RANKING_METRICS, campaign_metrics, default_alert_thresholds,
+    generate_performance_alerts, goal_attainment, period_frames, period_over_period,
+    rank_campaigns,
+)
 from modules.report_generator import create_pdf_report
 from modules.visualizations import (
-    budget_chart, channel_bar, channel_contribution_chart, funnel_chart,
-    monthly_chart, revenue_spend_chart,
+    budget_chart, campaign_metric_chart, channel_bar, channel_contribution_chart,
+    funnel_chart, monthly_chart, period_comparison_chart, ranking_chart,
+    revenue_spend_chart,
 )
 
 
@@ -253,6 +259,8 @@ filtered_data = filter_data(base_data, date_range, selected_channels)
 pages = [
     "▦  Executive Overview", "◉  Channel Performance", "▽  Funnel Analysis", "⌁  Monthly Trends",
     "◈  Budget Optimization", "✦  Business Insights", "⇩  Reports & Downloads",
+    "⇄  Campaign Comparison", "↔  Period-over-Period", "⇧  Campaign Rankings",
+    "⚠  Performance Alerts", "◎  Marketing Goals & Targets",
 ]
 page = st.sidebar.radio("WORKSPACE", pages)
 st.sidebar.caption(f"Showing {len(filtered_data):,} of {len(base_data):,} campaign records")
@@ -401,6 +409,207 @@ elif page.endswith("Reports & Downloads"):
     for item in recommendations:
         st.markdown(f"- {item}")
     st.caption("The PDF includes the ROI definition and its revenue-based limitation.")
+
+elif page.endswith("Campaign Comparison"):
+    st.markdown('<p class="section-intro">Compare campaign totals and efficiency measures for the current date and channel filters.</p>', unsafe_allow_html=True)
+    comparison_data = campaign_metrics(filtered_data)
+    if comparison_data.empty:
+        st.info("No campaigns match the current filters.")
+    else:
+        available_campaigns = comparison_data["Campaign Key"].tolist()
+        default_campaigns = available_campaigns[:2] if len(available_campaigns) >= 2 else available_campaigns
+        selected_campaigns = st.multiselect(
+            "Select two or more campaigns", available_campaigns, default=default_campaigns,
+            help="Campaigns are identified by name and ID; all measures use filtered campaign totals.",
+        )
+        metric_labels = {
+            "Impressions": "Impressions", "Clicks": "Clicks", "Leads": "Leads",
+            "Conversions": "Conversions", "Ad_Spend": "Ad spend (INR)",
+            "Revenue": "Revenue (INR)", "CTR (%)": "CTR (%)", "CPC": "CPC (INR)",
+            "CPA": "CPA (INR)", "ROI (%)": "ROI (%)", "ROAS": "ROAS (x)",
+        }
+        chosen_metric_label = st.selectbox("Chart metric", list(metric_labels.values()))
+        chosen_metric = next(key for key, label in metric_labels.items() if label == chosen_metric_label)
+        selected = comparison_data[comparison_data["Campaign Key"].isin(selected_campaigns)]
+        if len(selected) < 2:
+            st.info("Select at least two campaigns to render a comparison.")
+        else:
+            st.plotly_chart(
+                campaign_metric_chart(
+                    selected, chosen_metric, f"Campaign comparison · {chosen_metric_label}",
+                    currency=chosen_metric in {"Ad_Spend", "Revenue", "CPC", "CPA"},
+                ), width="stretch", theme=None,
+            )
+            st.subheader("Detailed campaign comparison")
+            st.dataframe(
+                format_table(selected[["Campaign_ID", "Campaign_Name", "Channel", *CAMPAIGN_METRICS]]),
+                width="stretch", hide_index=True,
+            )
+
+elif page.endswith("Period-over-Period"):
+    st.markdown('<p class="section-intro">Compare the selected date range with the immediately preceding period of equal length, using the same channel filter.</p>', unsafe_allow_html=True)
+    change = period_over_period(base_data, date_range, selected_channels)
+    current_period, previous_period, start, end, previous_start, previous_end = period_frames(
+        base_data, date_range, selected_channels
+    )
+    current_label = f"{start.date()} to {end.date()}" if start is not None else "Unavailable"
+    previous_label = f"{previous_start.date()} to {previous_end.date()}" if previous_start is not None else "Unavailable"
+    st.caption(f"Selected period: {current_label} · Previous equivalent period: {previous_label}")
+    delta_specs = [
+        ("Revenue change", "Revenue Change (%)", "percent", "normal"),
+        ("Spend change", "Spend Change (%)", "percent", "inverse"),
+        ("ROI change", "ROI Change (pp)", "points", "normal"),
+        ("Conversion change", "Conversion Change (%)", "percent", "normal"),
+        ("Lead change", "Lead Change (%)", "percent", "normal"),
+    ]
+    metric_columns = st.columns(5)
+    for column, (label, key, style, direction) in zip(metric_columns, delta_specs):
+        value = change[key]
+        if pd.isna(value):
+            formatted = "N/A"
+        elif style == "points":
+            formatted = f"{value:+.1f} pp"
+        else:
+            formatted = f"{value:+.1f}%"
+        column.metric(label, formatted, delta_color=direction)
+    if not len(previous_period):
+        st.info("No records were found in the previous equivalent period. Changes are unavailable until a prior baseline exists.")
+    elif not len(current_period):
+        st.info("No records match the selected period. Changes are unavailable for this selection.")
+    else:
+        selected_period_metric = st.selectbox(
+            "Compare period totals", ["Revenue", "Spend", "Conversions", "Leads", "ROI (%)"]
+        )
+        st.plotly_chart(period_comparison_chart(change, selected_period_metric), width="stretch", theme=None)
+    detail_rows = []
+    for label, current_key, previous_key, change_key in [
+        ("Revenue", "Current Revenue", "Previous Revenue", "Revenue Change (%)"),
+        ("Spend", "Current Spend", "Previous Spend", "Spend Change (%)"),
+        ("ROI (%)", "Current ROI (%)", "Previous ROI (%)", "ROI Change (pp)"),
+        ("Conversions", "Current Conversions", "Previous Conversions", "Conversion Change (%)"),
+        ("Leads", "Current Leads", "Previous Leads", "Lead Change (%)"),
+    ]:
+        detail_rows.append({
+            "Metric": label,
+            "Previous period": change[previous_key],
+            "Selected period": change[current_key],
+            "Change": change[change_key],
+        })
+    st.dataframe(pd.DataFrame(detail_rows), width="stretch", hide_index=True)
+    st.caption("Percent change = (selected − previous) ÷ previous. A zero or missing previous-period denominator is shown as unavailable. ROI change is in percentage points.")
+
+elif page.endswith("Campaign Rankings"):
+    st.markdown('<p class="section-intro">Rank campaigns using observed totals and rates from the current filters. Rates are recalculated from each campaign’s aggregated numerators and denominators.</p>', unsafe_allow_html=True)
+    rank_filter_columns = st.columns([1.3, 1, 1])
+    ranking_choice = rank_filter_columns[0].selectbox("Rank by", list(RANKING_METRICS))
+    rank_channels = rank_filter_columns[1].multiselect(
+        "Ranking channels", sorted(filtered_data.Channel.unique().tolist()),
+        default=sorted(filtered_data.Channel.unique().tolist()),
+    )
+    max_rows = max(1, len(campaign_metrics(filter_data(filtered_data, channels=rank_channels))))
+    top_n = rank_filter_columns[2].slider("Show campaigns", min_value=1, max_value=max_rows,
+                                         value=min(10, max_rows))
+    ranked = rank_campaigns(filter_data(filtered_data, channels=rank_channels), ranking_choice, top_n)
+    if ranked.empty:
+        st.info("No campaigns have a usable value for this ranking under the current filters.")
+    else:
+        metric, _ascending = RANKING_METRICS[ranking_choice]
+        currency_metric = metric in {"Revenue", "CPA"}
+        st.plotly_chart(ranking_chart(ranked, metric, ranking_choice, currency_metric), width="stretch", theme=None)
+        st.subheader("Sortable campaign ranking")
+        st.dataframe(format_table(ranked), width="stretch", hide_index=True)
+
+elif page.endswith("Performance Alerts"):
+    st.markdown('<p class="section-intro">Rule-based checks against filtered campaign results. Default CPA and spend thresholds come from the current campaign distribution and can be adjusted.</p>', unsafe_allow_html=True)
+    current_period, previous_period, start, end, previous_start, previous_end = period_frames(
+        base_data, date_range, selected_channels
+    )
+    defaults = default_alert_thresholds(current_period)
+    alert_controls = st.columns(3)
+    cpa_value = alert_controls[0].number_input(
+        "High CPA threshold (INR)", min_value=0.0,
+        value=float(defaults["High CPA threshold (INR)"] or 0), step=100.0,
+        help="Default is the median positive, finite campaign CPA in the selected period. Set a threshold that fits your business rule.",
+    )
+    spend_value = alert_controls[1].number_input(
+        "High spend threshold (INR)", min_value=0.0,
+        value=float(defaults["High spend threshold (INR)"] or 0), step=1000.0,
+        help="Default is the 75th percentile of positive campaign spend in the selected period.",
+    )
+    change_threshold = alert_controls[2].number_input(
+        "Significant conversion change (%)", min_value=1.0, max_value=1000.0,
+        value=20.0, step=5.0,
+    )
+    cpa_threshold = cpa_value if defaults["High CPA threshold (INR)"] is not None or cpa_value > 0 else None
+    spend_threshold = spend_value if defaults["High spend threshold (INR)"] is not None or spend_value > 0 else None
+    alerts = generate_performance_alerts(
+        current_period, previous_period, cpa_threshold, spend_threshold, change_threshold
+    )
+    st.caption(
+        "Alerts use current campaign totals. Revenue declines and significant conversion changes compare matching campaign IDs in the selected period and the immediately preceding equal-length period."
+    )
+    if alerts.empty:
+        st.success("No alert rules were triggered for the current filtered records.")
+    else:
+        count_columns = st.columns(3)
+        count_columns[0].metric("Active alerts", len(alerts))
+        count_columns[1].metric("High severity", int(alerts["Severity"].eq("High").sum()))
+        count_columns[2].metric("Medium severity", int(alerts["Severity"].eq("Medium").sum()))
+        st.dataframe(alerts, width="stretch", hide_index=True)
+    if not len(previous_period):
+        st.info("No prior-period records are available; period-change alert rules are omitted. Current-period rules remain active.")
+
+elif page.endswith("Marketing Goals & Targets"):
+    st.markdown('<p class="section-intro">Set your own goals and compare them with actuals in the selected filters. Monthly revenue and conversion targets are prorated to the selected calendar days.</p>', unsafe_allow_html=True)
+    target_top = st.columns(2)
+    target_bottom = st.columns(2)
+    monthly_revenue_target = target_top[0].number_input(
+        "Monthly revenue target (INR)", min_value=0.0, value=0.0, step=10000.0,
+        help="The target for each full calendar month in the selected range.",
+    )
+    monthly_conversion_target = target_top[1].number_input(
+        "Monthly conversion target", min_value=0, value=0, step=10,
+    )
+    maximum_cpa = target_bottom[0].number_input(
+        "Maximum CPA (INR)", min_value=0.0, value=0.0, step=100.0,
+    )
+    minimum_roi = target_bottom[1].number_input(
+        "Minimum revenue-based ROI (%)", min_value=0.0, value=0.0, step=10.0,
+    )
+    goals = goal_attainment(
+        filtered_data, date_range, monthly_revenue_target,
+        monthly_conversion_target, maximum_cpa, minimum_roi,
+    )
+    st.caption("A target value of 0 is treated as unset. Revenue-based ROI is not profit-based ROI.")
+    goal_columns = st.columns(4)
+    for column, (_, row) in zip(goal_columns, goals.iterrows()):
+        actual, target, progress = row["Actual"], row["Target"], row["Progress"]
+        metric = row["Metric"]
+        if pd.isna(actual):
+            actual_text = "N/A"
+        elif metric in {"Revenue", "CPA"}:
+            actual_text = format_inr(actual, 2 if metric == "CPA" else 0)
+        elif metric == "ROI (%)":
+            actual_text = format_percent(actual, 1)
+        else:
+            actual_text = f"{actual:,.0f}"
+        if pd.isna(target):
+            target_text = "Target not set"
+        elif metric in {"Revenue", "CPA"}:
+            target_text = format_inr(target, 2 if metric == "CPA" else 0)
+        elif metric == "ROI (%)":
+            target_text = format_percent(target, 1)
+        else:
+            target_text = f"{target:,.0f}"
+        column.metric(metric, actual_text, delta=row["Status"], delta_color=("normal" if row["Status"] == "Met" else "inverse"))
+        column.caption(f"Target: {target_text}")
+        if pd.notna(progress):
+            column.progress(float(progress), text=f"{progress:.0%} of goal")
+        else:
+            column.caption("Set a positive target to display progress.")
+
+    st.subheader("Actual versus target")
+    st.dataframe(goals[["Metric", "Actual", "Target", "Status"]], width="stretch", hide_index=True)
 
 st.caption(
     "Method note: ROI is revenue-based: (revenue − ad spend) ÷ ad spend. "
